@@ -2,9 +2,14 @@ import { useState } from 'react';
 import { LogIn, UserPlus, Loader2, CalendarCheck, QrCode, LineChart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export default function Login() {
+interface LoginProps {
+  initialTab?: 'login' | 'register';
+  onBackToCatalog?: () => void;
+}
+
+export default function Login({ initialTab = 'login', onBackToCatalog }: LoginProps = {}) {
   const { login, register } = useAuth();
-  const [tab, setTab] = useState<'login' | 'register'>('login');
+  const [tab, setTab] = useState<'login' | 'register'>(initialTab);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -200,6 +205,17 @@ export default function Login() {
                   }
                 </button>
               </form>
+              {onBackToCatalog && (
+                <div className="mt-6 text-center border-t border-gray-100 pt-4">
+                  <button
+                    type="button"
+                    onClick={onBackToCatalog}
+                    className="text-sm font-semibold text-gray-500 hover:text-primary transition-all cursor-pointer bg-transparent border-0 inline-flex items-center gap-1.5"
+                  >
+                    ← Volver al catálogo de eventos
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -9,6 +9,7 @@ const controller = new EventController();
 
 // Públicas
 router.get('/', (req, res, next) => controller.listPublished(req, res, next));
+router.get('/public/:id', (req, res, next) => controller.getById(req, res, next));
 router.get('/:id', (req, res, next) => controller.getById(req, res, next));
 
 // Asistente

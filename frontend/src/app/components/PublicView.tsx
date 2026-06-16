@@ -97,8 +97,11 @@ function QuickAuthModal({ eventTitle, onClose, onSuccess }: QuickAuthModalProps)
   );
 }
 
-// ── Vista principal ───────────────────────────────────────────────────────────
-export default function PublicView() {
+interface PublicViewProps {
+  onSelectEvent: (id: string) => void;
+}
+
+export default function PublicView({ onSelectEvent }: PublicViewProps) {
   const { hasRole, isAuthenticated, user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -282,7 +285,13 @@ export default function PublicView() {
             Capacidad: {event.capacity}
           </div>
           
-          <div className="mt-auto pt-4 border-t border-gray-100/5">
+          <div className="mt-auto pt-4 border-t border-gray-100/5 space-y-2">
+            <button
+              onClick={() => onSelectEvent(event.id)}
+              className="w-full bg-gray-50 hover:bg-gray-100 text-primary py-3 rounded-xl transition-all font-bold text-sm cursor-pointer border border-gray-100 text-center"
+            >
+              Ver detalles
+            </button>
             {registered.has(event.id) ? (
               <button
                 disabled
