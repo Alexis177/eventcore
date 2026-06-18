@@ -66,6 +66,21 @@ class ApiClient {
   delete<T>(endpoint: string) {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
+
+  async downloadBlob(endpoint: string, requiresAuth = true): Promise<Blob> {
+    const headers: Record<string, string> = {};
+    if (requiresAuth) {
+      const t = this.getToken();
+      if (t) headers['Authorization'] = `Bearer ${t}`;
+    }
+    const config: RequestInit = { method: 'GET', headers };
+    const response = await fetch(`${this.baseUrl}${endpoint}`, config);
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.message ?? 'Error al descargar el archivo');
+    }
+    return response.blob();
+  }
 }
 
 export const api = new ApiClient(BASE_URL);

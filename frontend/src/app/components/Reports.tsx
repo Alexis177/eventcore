@@ -11,6 +11,7 @@ import {
 import { eventService } from '../services/eventService';
 import { useAuth } from '../context/AuthContext';
 import type { Event } from '../types';
+import { toast } from 'sonner';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: 'Borrador', published: 'Publicado',
@@ -23,25 +24,25 @@ const STATUS_COLOR: Record<string, string> = {
   finished:  'bg-blue-50 text-blue-700 border border-blue-200',
 };
 
-function exportToCSV(events: Event[]) {
-  const headers = ['Título', 'Estado', 'Ubicación', 'Fecha inicio', 'Fecha fin', 'Capacidad', 'Organizador'];
-  const rows = events.map((e) => [
-    `"${e.title.replace(/"/g, '""')}"`,
-    STATUS_LABEL[e.status] ?? e.status,
-    `"${e.location.replace(/"/g, '""')}"`,
-    new Date(e.startDate).toLocaleString('es-MX'),
-    new Date(e.endDate).toLocaleString('es-MX'),
-    e.capacity,
-    `"${(e.organizer?.name ?? '').replace(/"/g, '""')}"`,
-  ]);
-  const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `eventcore-reporte-${new Date().toISOString().slice(0, 10)}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
+async function exportToCSV() {
+  try {
+    toast.loading('Generando reporte analítico de eventos...');
+    const blob = await eventService.downloadAnalyticsReportCSV();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const fechaReporte = new Date().toISOString().split('T')[0];
+    link.setAttribute('download', `Reporte_Analitico_Eventos_${fechaReporte}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    toast.dismiss();
+    toast.success('Reporte analítico descargado con éxito');
+  } catch (err) {
+    toast.dismiss();
+    toast.error(err instanceof Error ? err.message : 'Error al descargar el reporte');
+  }
 }
 
 function printReport(printRef: React.RefObject<HTMLDivElement | null>) {
@@ -150,7 +151,7 @@ export default function Reports() {
         </div>
         {!isLoading && events.length > 0 && (
           <div className="flex items-center gap-3">
-            <button onClick={() => exportToCSV(events)}
+            <button onClick={exportToCSV}
               className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all text-sm font-bold shadow-md cursor-pointer border-0">
               <Download className="w-4 h-4" /> Exportar CSV
             </button>

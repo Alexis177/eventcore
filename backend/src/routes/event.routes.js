@@ -7,6 +7,14 @@ import validate, { schemas } from '../middlewares/validate.middleware.js';
 const router = Router();
 const controller = new EventController();
 
+// Reporte global (debe ir antes de las rutas con :id para evitar colisiones)
+router.get('/report/global/csv', authMiddleware, roleMiddleware('organizer', 'admin'),
+  (req, res, next) => controller.downloadGlobalEventsReport(req, res, next));
+
+// Reporte analítico (debe ir antes de las rutas con :id para evitar colisiones)
+router.get('/report/analytics/csv', authMiddleware, roleMiddleware('organizer', 'admin'),
+  (req, res, next) => controller.downloadAnalyticsReportCSV(req, res, next));
+
 // Públicas
 router.get('/', (req, res, next) => controller.listPublished(req, res, next));
 router.get('/public/:id', (req, res, next) => controller.getById(req, res, next));
@@ -51,5 +59,9 @@ router.post('/:id/comments', authMiddleware, roleMiddleware('attendee'),
 // Obtener estadísticas del evento (organizador/admin)
 router.get('/:id/stats', authMiddleware, roleMiddleware('organizer', 'admin'),
   (req, res, next) => controller.getStats(req, res, next));
+
+// Descargar reporte inteligente CSV del evento (organizador/admin)
+router.get('/:id/report/csv', authMiddleware, roleMiddleware('organizer', 'admin'),
+  (req, res, next) => controller.downloadCompleteReportCSV(req, res, next));
 
 export default router;

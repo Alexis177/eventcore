@@ -30,6 +30,15 @@ class EventService {
   getEventStats(id: string): Promise<any> {
     return api.get<any>(`/events/${id}/stats`);
   }
+  downloadEventReportCSV(id: string): Promise<Blob> {
+    return api.downloadBlob(`/events/${id}/report/csv`);
+  }
+  downloadGlobalReportCSV(): Promise<Blob> {
+    return api.downloadBlob('/events/report/global/csv');
+  }
+  downloadAnalyticsReportCSV(): Promise<Blob> {
+    return api.downloadBlob('/events/report/analytics/csv');
+  }
 }
 
 export const eventService = new EventService();

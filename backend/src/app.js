@@ -34,18 +34,4 @@ app.get('/health', (_req, res) => res.json({ status: 'ok', project: 'EventCore' 
 app.use((_req, res) => res.status(404).json({ success: false, message: 'Ruta no encontrada' }));
 app.use(errorMiddleware);
 
-const start = async () => {
-  try {
-    await database.connect();
-    await database.sync();
-    initCronJobs();
-    app.listen(env.port, () => {
-      console.log(`🚀 EventCore API corriendo en http://localhost:${env.port}`);
-      console.log(`📌 Entorno: ${env.nodeEnv}`);
-    });
-  } catch (error) {
-    console.error('❌ Error al iniciar el servidor:', error);
-    process.exit(1);
-  }
-};
-start();
+export default app;

@@ -12,6 +12,7 @@ router.use('/auth', authRoutes);
 router.use('/admin', adminRoutes);
 router.use('/events', eventRoutes);
 router.use('/staff', staffRoutes);
+router.use('/checkin', staffRoutes);
 router.use('/attendee', attendeeRoutes);
 router.use('/organizer', organizerRoutes);
 

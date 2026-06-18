@@ -294,6 +294,26 @@ function PostEventReportModal({ event, onClose }: { event: Event; onClose: () =>
     }
   };
 
+  const handleDownloadReport = async () => {
+    try {
+      toast.loading('Generando reporte individual del evento...');
+      const blob = await eventService.downloadEventReportCSV(event.id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Reporte_Inteligente_${event.title.replace(/\s+/g, '_')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.dismiss();
+      toast.success('Reporte descargado con éxito');
+    } catch (err) {
+      toast.dismiss();
+      toast.error(err instanceof Error ? err.message : 'Error al descargar el reporte');
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[92vh]" onClick={e => e.stopPropagation()}>
@@ -302,7 +322,12 @@ function PostEventReportModal({ event, onClose }: { event: Event; onClose: () =>
             <h2 className="text-xl font-bold text-gray-900">Métricas y Cierre de Evento</h2>
             <p className="text-sm text-gray-500">Historial Logístico — {event.title}</p>
           </div>
-          <button onClick={onClose} className="border-0 bg-transparent cursor-pointer text-gray-400 hover:text-gray-700"><X className="w-5 h-5"/></button>
+          <div className="flex items-center gap-3">
+            <button onClick={handleDownloadReport} className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl hover:bg-emerald-700 transition-all text-xs font-bold shadow-md cursor-pointer border-0">
+              <Download className="w-3.5 h-3.5" /> Descargar CSV Inteligente
+            </button>
+            <button onClick={onClose} className="border-0 bg-transparent cursor-pointer text-gray-400 hover:text-gray-700"><X className="w-5 h-5"/></button>
+          </div>
         </div>
         
         <div className="p-6 overflow-y-auto space-y-6 flex-1 bg-gray-50/50">
@@ -412,64 +437,25 @@ export default function EventManagement({ onCreateEvent, onSelectEvent }: EventM
   const [isCancelLoading, setIsCancelLoading] = useState(false);
   const [page, setPage] = useState(1);
 
-  const handleExportCSV = () => {
-    // 1. Usamos punto y coma para compatibilidad regional con Excel
-    const separator = ';';
-
-    const headers = [
-      'Título',
-      'Categoría',
-      'Estado',
-      'Ubicación',
-      'Fecha Inicio',
-      'Hora Inicio',
-      'Fecha Fin',
-      'Hora Fin',
-      'Capacidad Aforo'
-    ];
-
-    // 2. Función auxiliar para limpiar textos (si alguien usa comillas en el título, no romperá el Excel)
-    const cleanText = (text: any) => `"${(text || '').toString().replace(/"/g, '""')}"`;
-
-    const rows = events.map(event => {
-      const startDate = new Date(event.startDate);
-      const endDate = new Date(event.endDate);
-
-      // Mapeo de estados a español
-      const statusText = event.status === 'published' ? 'Publicado' 
-                       : event.status === 'draft' ? 'Borrador' 
-                       : event.status === 'finished' ? 'Finalizado' 
-                       : 'Cancelado';
-
-      return [
-        cleanText(event.title),
-        cleanText(event.category || 'General'),
-        cleanText(statusText),
-        cleanText(event.location),
-        startDate.toLocaleDateString('es-MX'),
-        startDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
-        endDate.toLocaleDateString('es-MX'),
-        endDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
-        event.capacity
-      ].join(separator); // Unimos usando el punto y coma
-    });
-
-    // 3. Agregamos "sep=;\n" en la primera línea. Esto le dice a Excel qué separador usar.
-    const csvContent = "sep=;\n" + [headers.join(separator), ...rows].join('\n');
-
-    // 4. Mantenemos el BOM (\ufeff) para los acentos
-    const blob = new Blob(["\ufeff", csvContent], { type: 'text/csv;charset=utf-8;' });
-    
-    // 5. Descarga
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `Reporte_Eventos_ESCOM_${new Date().toLocaleDateString('es-MX')}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const handleExportCSV = async () => {
+    try {
+      toast.loading('Generando reporte global de eventos...');
+      const blob = await eventService.downloadGlobalReportCSV();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const fechaReporte = new Date().toISOString().split('T')[0];
+      link.setAttribute('download', `Reporte_Global_EventCore_${fechaReporte}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.dismiss();
+      toast.success('Reporte descargado con éxito');
+    } catch (err) {
+      toast.dismiss();
+      toast.error(err instanceof Error ? err.message : 'Error al descargar el reporte');
+    }
   };
 
   const load = async () => {
